@@ -28,7 +28,8 @@ pipeline {
         stage("Sonarqube Analysis") {
             steps {
                 withSonarQubeEnv('SonarQubeServer') {
-                    sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Reddit-Clone-CI \
+                    sh '''
+                    $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Reddit-Clone-CI \
                     -Dsonar.projectKey=Reddit-Clone-CI'''
                 }
             }
@@ -50,27 +51,26 @@ pipeline {
                 sh "trivy fs . > trivyfs.txt"
              }
          }
-	 stage("Build & Push Docker Image") {
+	    stage("Build & Push Docker Image") {
              steps {
                  script {
-                     docker.withRegistry('',DOCKER_PASS) {
-                         docker_image = docker.build "${IMAGE_NAME}"
+                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
+                        def dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                        dockerImage.push()
+                        dockerImage.push('latest')
                      }
-                     docker.withRegistry('',DOCKER_PASS) {
-                         docker_image.push("${IMAGE_TAG}")
-                         docker_image.push('latest')
-                     }
-                 }
-             }
-         }
-	 stage("Trivy Image Scan") {
+                }
+            }
+        }
+        
+	    stage("Trivy Image Scan") {
              steps {
                  script {
 	              sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image sonarqube:latest --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table > trivyimage.txt')
                  }
              }
          }
-	 stage ('Cleanup Artifacts') {
+	    stage ('Cleanup Artifacts') {
              steps {
                  script {
                       sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
@@ -78,24 +78,24 @@ pipeline {
                  }
              }
          }
-	 stage("Trigger CD Pipeline") {
+	    stage("Trigger CD Pipeline") {
             steps {
                 script {
                     sh "curl -v -k --user clouduser:${JENKINS_API_TOKEN} -X POST -H 'cache-control: no-cache' -H 'content-type: application/x-www-form-urlencoded' --data 'IMAGE_TAG=${IMAGE_TAG}' 'ec2-65-2-187-142.ap-south-1.compute.amazonaws.com:8080/job/Reddit-Clone-CD/buildWithParameters?token=gitops-token'"
                 }
             }
          }
-     }
-     post {
-        always {
-           emailext attachLog: true,
-               subject: "'${currentBuild.result}'",
-               body: "Project: ${env.JOB_NAME}<br/>" +
+    
+         post {
+             always {
+                emailext attachLog: true,
+                    subject: "'${currentBuild.result}'",
+                    body: "Project: ${env.JOB_NAME}<br/>" +
                    "Build Number: ${env.BUILD_NUMBER}<br/>" +
                    "URL: ${env.BUILD_URL}<br/>",
-               to: 'revgowda23@gmail.com',                              
-               attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
-        }
-     }
+                    to: 'revgowda23@gmail.com',                              
+                    attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+             }
+         }
     
 }
