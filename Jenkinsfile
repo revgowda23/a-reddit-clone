@@ -6,13 +6,12 @@ pipeline {
     }
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
-        APP_NAME = "reddit-clone-pipeline"
+        APP_NAME = "reddit-clone-app"
         RELEASE = "1.0.0"
-        DOCKER_USER = "revgowda23"
+        DOCKER_USER = "revkumar23"
         DOCKER_PASS = 'dockerhub'
         IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
         IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
-	JENKINS_API_TOKEN = credentials("JENKINS_API_TOKEN")
     }
     stages {
         stage('clean workspace') {
@@ -36,7 +35,7 @@ pipeline {
         stage("Quality Gate") {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'SonarQube-Token'
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonarqube-token'
                 }
             }
         }
@@ -66,7 +65,7 @@ pipeline {
 	 stage("Trivy Image Scan") {
              steps {
                  script {
-	              sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image revgowda23/reddit-clone-pipeline:latest --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table > trivyimage.txt')
+	              sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image sonarqube:latest --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table > trivyimage.txt')
                  }
              }
          }
