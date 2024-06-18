@@ -3,7 +3,7 @@ pipeline {
     tools {
         jdk 'jdk17'
         nodejs 'nodejs16'
-        SonarQubeScanner 'SonarQubeScanner'
+        
     }
     environment {
         SCANNER_HOME = tool 'SonarQubeScanner' , type: 'hudson.plugins.sonar.SonarRunnerInstallation'
