@@ -3,10 +3,10 @@ pipeline {
     tools {
         jdk 'jdk17'
         nodejs 'nodejs16'
-        sonarQubeScanner 'sonarqube-scanner'
+        SonarQubeScanner 'sonarqube-scanner'
     }
     environment {
-        SCANNER_HOME = tool 'sonarqube-scanner'
+        SCANNER_HOME = tool 'SonarQubeScanner' , type: 'hudson.plugins.sonar.SonarRunnerInstallation'
         APP_NAME = "reddit-clone-app"
         RELEASE = "1.0.0"
         DOCKER_USER = "revkumar23"
