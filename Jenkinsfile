@@ -3,7 +3,7 @@ pipeline {
     tools {
         jdk 'jdk17'
         nodejs 'nodejs16'
-        SonarQubeScanner 'sonarqube-scanner'
+        SonarQubeScanner 'SonarQubeScanner'
     }
     environment {
         SCANNER_HOME = tool 'SonarQubeScanner' , type: 'hudson.plugins.sonar.SonarRunnerInstallation'
@@ -27,7 +27,7 @@ pipeline {
         }
         stage("Sonarqube Analysis") {
             steps {
-                withSonarQubeEnv('SonarQube-Server') {
+                withSonarQubeEnv('SonarQubeServer') {
                     sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Reddit-Clone-CI \
                     -Dsonar.projectKey=Reddit-Clone-CI'''
                 }
